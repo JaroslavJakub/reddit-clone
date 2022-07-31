@@ -53,7 +53,7 @@ public class AuthController {
 		return authService.login(loginRequest);	
 	}
 	
-	@PostMapping(path = "refresh/token")
+	@PostMapping(path = "/refresh/token")
 	public AuthenticationResponse refreshTokens(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
 		return authService.refreshToken(refreshTokenRequest);
 	}
