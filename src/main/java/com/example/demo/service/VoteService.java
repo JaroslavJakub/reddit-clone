@@ -16,6 +16,7 @@ import com.example.demo.repository.VoteRepository;
 
 import lombok.AllArgsConstructor;
 
+import static com.example.demo.model.VoteType.DOWNVOTE;
 import static com.example.demo.model.VoteType.UPVOTE;;
 
 @Service
@@ -42,16 +43,49 @@ public class VoteService {
 		Optional<Vote> voteByPostAndUser = voteRepository.findTopByPostAndUserOrderByVoteIdDesc(post, authService.getCurrentUser());
 		
 		if (voteByPostAndUser.isPresent() && voteByPostAndUser.get().getVoteType().equals(voteDto.getVoteType())) {
-			throw new SpringRedditException("You have already " + voteDto.getVoteType() + "'d for this post.");
+			switch (voteDto.getVoteType()) {
+				case UPVOTE :
+					post.setVoteCount(post.getVoteCount() - 1);
+					voteRepository.deleteById(voteByPostAndUser.get().getVoteId());
+					postRepository.save(post);
+					break;
+				case DOWNVOTE :
+					post.setVoteCount(post.getVoteCount() + 1);
+					voteRepository.deleteById(voteByPostAndUser.get().getVoteId());
+					postRepository.save(post);
+					break;
+			}
+//			throw new SpringRedditException("You have already " + voteDto.getVoteType() + "'d for this post.");
+//			throw new SpringRedditException("Vote has been removed");
 		}
 		
-		if(UPVOTE.equals(voteDto.getVoteType())) {
-			post.setVoteCount(post.getVoteCount() + 1);
-		} else {
-			post.setVoteCount(post.getVoteCount() - 1);
+		if (voteByPostAndUser.isPresent() && !(voteByPostAndUser.get().getVoteType().equals(voteDto.getVoteType()))) {
+			switch (voteDto.getVoteType()) {
+				case UPVOTE :
+					post.setVoteCount(post.getVoteCount() + 2);
+					voteRepository.updateVoteTypeById(UPVOTE, voteByPostAndUser.get().getVoteId());
+					break;
+				case DOWNVOTE :
+					post.setVoteCount(post.getVoteCount() - 2);
+					voteRepository.updateVoteTypeById(DOWNVOTE, voteByPostAndUser.get().getVoteId());
+					break;
+			}
+//			voteRepository.save(mapToVote(voteDto, post));
+			postRepository.save(post);
 		}
-		voteRepository.save(mapToVote(voteDto, post));
-		postRepository.save(post);
+		
+		if (!voteByPostAndUser.isPresent()) {
+			switch (voteDto.getVoteType()) {
+				case UPVOTE :
+					post.setVoteCount(post.getVoteCount() + 1);
+					break;
+				case DOWNVOTE :
+					post.setVoteCount(post.getVoteCount() - 1);
+					break;
+				}
+			voteRepository.save(mapToVote(voteDto, post));
+			postRepository.save(post);
+		}
 	}
 
 }
