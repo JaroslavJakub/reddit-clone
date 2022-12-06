@@ -2,6 +2,7 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head></head>
 <body>
-<a href='sasldn'>example</a>
+<p><a th:text="${username}"></a> posted a comment on your post :</p>
+<a th:href="${POST_URL}" th:text="${POST_URL}"></a>
 </body>
 </html>
